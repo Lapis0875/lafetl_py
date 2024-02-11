@@ -20,7 +20,7 @@ class AnimationInfo(LaftelDBEntry):
     air_year_quarter: Year
     audio_language: int | None
     cours: Cours | None                             # ~쿨 형식의 표현
-    distributed_air_time: str | None
+    distributed_air_time: AirTime | None
     distributed_station: str | None
     is_dubbed: bool
     is_laftel_only: bool
@@ -28,7 +28,7 @@ class AnimationInfo(LaftelDBEntry):
     is_uncensored: bool
     item: NonNegativeInt
     medium: Medium
-    original_air_time: str | None
+    original_air_time: AirTime | None
     original_station: str | None
     original_writer: list[PersonInfo]
     production: Production
@@ -38,9 +38,9 @@ class AnimationInfo(LaftelDBEntry):
     staff: list[NonNegativeInt]
     subtitle_language: NonNegativeInt | None
     
-    @field_validator("original_air_time", mode="before")
+    @field_validator("distributed_air_time", "original_air_time", mode="before")
     @classmethod
-    def validate_original_air_time(cls, v: str) -> str:
+    def validate_original_air_time(cls, v: str) -> AirTime | None:
         if isinstance(v, str) and v != "":
             if "|" in v:
                 t, d = v.split(" | ")
@@ -51,7 +51,7 @@ class AnimationInfo(LaftelDBEntry):
                 return AirTime.model_construct(time=v, day="")
         return None
 
-    @field_serializer("original_air_time")
+    @field_serializer("distributed_air_time", "original_air_time")
     @classmethod
     def serialize_original_air_time(cls, airTime: AirTime | None) -> str:
         if airTime is None:
@@ -110,7 +110,7 @@ class AnimeSearchResult(LaftelObject):
     
     @field_validator("distributed_air_time", mode="before")
     @classmethod
-    def validate_original_air_time(cls, v: str) -> str:
+    def validate_original_air_time(cls, v: str) -> AirTime | None:
         if isinstance(v, str) and v != "":
             if "|" in v:
                 t, d = v.split(" | ")

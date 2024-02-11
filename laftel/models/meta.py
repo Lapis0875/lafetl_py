@@ -7,7 +7,7 @@ class MetaInfo(LaftelDBEntry):
     """라프텔 객체의 메타 정보를 나타냅니다."""
     item: NonNegativeInt
     is_viewing: bool
-    rank: PositiveInt
+    rank: int | None
     point: NonNegativeInt
     cnt_short_review: NonNegativeInt
     is_avod: bool
