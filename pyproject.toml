@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "laftel-py"
+version = "0.1.0"
+description = "Unofficial API wrapper of laftel.net, an animation streaming service"
+authors = ["Lapis0875 <lapis0875@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "laftel"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aiohttp = "^3.9.3"
+pydantic = "^2.6.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
