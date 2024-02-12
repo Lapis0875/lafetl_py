@@ -53,7 +53,7 @@ class AnimationInfo(LaftelDBEntry):
 
     @field_serializer("distributed_air_time", "original_air_time")
     @classmethod
-    def serialize_original_air_time(cls, airTime: AirTime | None) -> str:
+    def serialize_original_air_time(cls, airTime: AirTime | None) -> str | None:
         if airTime is None:
             return None
         
@@ -101,7 +101,7 @@ class AnimeSearchResult(LaftelObject):
             if len(args) != 4:
                 raise ValueError(f"Invalid crop ratio value: {v}\n : 4 arguments must be provided.")
             return CropRatio.model_construct(x=int(args[0]), y=int(args[1]), width=int(args[2]), height=int(args[3]))
-        return None
+        raise ValueError(f"Invalid crop ratio value: {v}\n : wrong type or invalid value.")
     
     @field_serializer("cropped_img", "home_cropped_img")
     @classmethod
@@ -123,7 +123,7 @@ class AnimeSearchResult(LaftelObject):
 
     @field_serializer("distributed_air_time")
     @classmethod
-    def serialize_original_air_time(cls, airTime: AirTime | None) -> str:
+    def serialize_original_air_time(cls, airTime: AirTime | None) -> str | None:
         if airTime is None:
             return None
         
@@ -174,7 +174,7 @@ class PartialAnime(LaftelObject):
             if len(args) != 4:
                 raise ValueError(f"Invalid crop ratio value: {v}\n : 4 arguments must be provided.")
             return CropRatio.model_construct(x=int(args[0]), y=int(args[1]), width=int(args[2]), height=int(args[3]))
-        return v
+        raise ValueError(f"Invalid crop ratio value: {v}\n : wrong type or invalid value.")
     
     @field_serializer("cropped_img")
     @classmethod

@@ -1,5 +1,6 @@
 from pprint import pprint
 from typing import Any, Final
+import warnings
 
 import aiohttp
 
@@ -37,8 +38,15 @@ class LaftelAPI:
     
     # Below methods should be used only in async context. Other behaviors can generate errors.
     
+    async def items(self, id: int) -> Anime:
+        self.handle_session()
+        async with self._session as session:
+            async with session.get(f"/api/items/v2/41880/", headers=laftel_header) as response:
+                resp_content = await response.json()
+                return Anime(**resp_content)
+    
     async def detail(self, id: int) -> Anime:
-        """라프텔의 애니메이션 정보를 가져옵니다.
+        """라프텔의 애니메이션 정보를 가져옵니다. (v1 API)
 
         Args:
             id (int): 찾으려는 애니메이션의 id
@@ -46,6 +54,9 @@ class LaftelAPI:
         Returns:
             Anime: 애니메이션 객체.
         """
+        warnings.warn(
+            "This method is deprecated and will be removed in the future. Use `items` instead."
+        )
         self.handle_session()
         async with self._session as session:
             async with session.get(f"/api/v1.0/items/{id}/detail", headers=laftel_header) as response:
@@ -67,7 +78,7 @@ class LaftelAPI:
         """
         self.handle_session()
         async with self._session as session:
-            res: list[PartialAnime] = []
+            res: list[AnimeSearchResult] = []
             async with session.get(
                 url="/api/search/v3/keyword/",
                 headers=laftel_header,
@@ -80,7 +91,7 @@ class LaftelAPI:
             return res, resp_content["next"] is not None
 
     async def search_all(self, query: str, viewing_only: bool = True, size: int = 24) -> list[AnimeSearchResult]:
-        res: list[PartialAnime] = []
+        res: list[AnimeSearchResult] = []
         offset: int = 0
         keep_query: bool = True
         while keep_query:
