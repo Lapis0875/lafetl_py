@@ -1,10 +1,12 @@
 from pprint import pprint
 from typing import Any, Final
-import warnings
 
 import aiohttp
 
+from laftel.models.anime import AnimeV1
+
 from .models import *
+from .utils.deprecate import deprecated
 
 __all__ = ("LaftelAPI", )
 
@@ -39,13 +41,22 @@ class LaftelAPI:
     # Below methods should be used only in async context. Other behaviors can generate errors.
     
     async def items(self, id: int) -> Anime:
+        """라프텔의 애니메이션 정보를 가져옵니다. (v2 API)
+
+        Args:
+            id (int): 찾으려는 애니메이션의 id
+
+        Returns:
+            Anime: 애니메이션 객체.
+        """
         self.handle_session()
         async with self._session as session:
-            async with session.get(f"/api/items/v2/41880/", headers=laftel_header) as response:
+            async with session.get(f"/api/items/v2/{id}/", headers=laftel_header) as response:
                 resp_content = await response.json()
                 return Anime(**resp_content)
     
-    async def detail(self, id: int) -> Anime:
+    @deprecated((1, 0), (2, 0), "items")
+    async def detail(self, id: int) -> AnimeV1:
         """라프텔의 애니메이션 정보를 가져옵니다. (v1 API)
 
         Args:
@@ -54,14 +65,11 @@ class LaftelAPI:
         Returns:
             Anime: 애니메이션 객체.
         """
-        warnings.warn(
-            "This method is deprecated and will be removed in the future. Use `items` instead."
-        )
         self.handle_session()
         async with self._session as session:
             async with session.get(f"/api/v1.0/items/{id}/detail", headers=laftel_header) as response:
                 resp_content = await response.json()
-                return Anime(**resp_content)
+                return AnimeV1(**resp_content)
     
     async def search(self, query: str, viewing_only: bool = True, offset: int = 0, size: int = 24) -> tuple[list[AnimeSearchResult], bool]:
         """라프텔의 애니메이션 정보를 검색합니다.
@@ -73,7 +81,7 @@ class LaftelAPI:
             size (int): 한번에 검색할 작품의 개수. 기본값은 24.
 
         Returns:
-            list[Anime]: 검색된 애니메이션 객체들의 배열.
+            list[AnimeSearchResult]: 검색된 애니메이션 객체들의 배열.
             bool: 다음 페이지가 있는지 여부.
         """
         self.handle_session()

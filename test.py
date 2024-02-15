@@ -1,6 +1,13 @@
 from asyncio import run
 from laftel import LaftelAPI
 
+async def items():
+    api = LaftelAPI()
+    async with api:
+        res = [await api.items(41854), await api.items(16004)]   # 마슐: 신각자 후보 선발시험 편 / (더빙) 어떤 과학의 초전자포
+        for anime in res:
+            print(f"애니 제목: {anime.name}\n라프텔 평점: {anime.avg_rating}")
+
 async def detail():
     api = LaftelAPI()
     async with api:
@@ -16,8 +23,8 @@ async def search_all():
             print(f"  애니 제목: {anime.name}\n  라프텔 id: {anime.id}")
 
 async def main():
-    print("api: detail()")
-    await detail()
+    print("api: items()")
+    await items()
     
     print("api: search_all()")
     await search_all()

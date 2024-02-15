@@ -1,3 +1,4 @@
+from audioop import avg
 from pydantic import NonNegativeFloat, NonNegativeInt, field_validator, field_serializer
 from pydantic_core import Url
 from datetime import datetime
@@ -11,6 +12,7 @@ from .person import *
 from .production import Production
 from .meta import MetaInfo
 from .image import *
+from .rating import Rating
 from .validators import Season, Year, Cours
 
 __all__ = ("AnimationInfo", "AnimeSearchResult", "PartialAnime", "Anime")
@@ -181,8 +183,9 @@ class PartialAnime(LaftelObject):
     def serialize_cropped_img(cls, cropRatio: CropRatio) -> str:
         return f"{cropRatio.x},{cropRatio.y},{cropRatio.width},{cropRatio.height}"
 
-class Anime(LaftelDBEntry):
-    """라프텔의 작품(애니메이션, 코믹스 등)을 나타냅니다."""
+class AnimeV1(LaftelDBEntry):
+    """라프텔의 작품(애니메이션, 코믹스 등)을 나타냅니다.
+    V1.0 API의 detaisl 엔드포인트에서 반환됩니다."""
     animation_info: AnimationInfo       # 이 애니메이션의 정보를 나타내는 JSON 데이터.
     author: list[PartialPersonInfo]            # 작가로 추정됨.
     author_item: list[PersonInfo]       # 작가 정보로 추정됨.
@@ -207,3 +210,70 @@ class Anime(LaftelDBEntry):
     viewable: bool                      # 이 애니메이션이 라프텔에서 검색 가능한지 여부. false일 경우 검색 불가.
     webtoon_info: dict | None           # 이 애니메이션의 웹툰 정보를 나타내는 JSON 데이터 일 것으로 추정.
     
+class Anime(LaftelObject):
+    air_year_quarter: Year
+    author: list[str]
+    avg_rating: NonNegativeFloat
+    avod_status: str
+    awards: list[str]
+    cnt_short_review: NonNegativeInt
+    content: str
+    content_rating: ContentRating
+    copyright: str
+    distributed_air_time: AirTime | None
+    expire_datetime: datetime | None
+    genres: list[str]
+    highlight_video: None
+    illustrator: list[str]
+    images: list[Image]
+    img: Url
+    is_adult: bool
+    is_avod: bool
+    is_dubbed: bool
+    is_ending: bool
+    is_episode_existed: bool
+    is_hate: bool
+    is_laftel_only: bool
+    is_svod: bool
+    is_uncensored: bool
+    is_viewing: bool
+    is_wish: bool
+    medium: Medium
+    name: str
+    notice: str | None
+    production: str
+    rating: Rating
+    series_id: NonNegativeInt
+    tags: list[str]
+    
+    @field_validator("distributed_air_time", mode="before")
+    @classmethod
+    def validate_original_air_time(cls, v: str) -> AirTime | None:
+        if isinstance(v, str) and v != "":
+            if "|" in v:
+                t, d = v.split(" | ")
+                return AirTime.model_construct(time=t, day=d)
+            elif v.endswith("일"):
+                return AirTime.model_construct(time=None, day=v)
+            else:
+                return AirTime.model_construct(time=v, day="")
+        return None
+
+    @field_serializer("distributed_air_time")
+    @classmethod
+    def serialize_original_air_time(cls, airTime: AirTime | None) -> str | None:
+        if airTime is None:
+            return None
+        
+        content: list[str] = ["", ""]
+        if airTime.time is not None:
+            content[0] = f"{airTime.time.hour}:{airTime.time.minute}"
+        if airTime.day is not None:
+            content[1] = str(airTime.day)
+        if content[0]:
+            if content[1]:
+                return f"{content[0]} | {content[1]}"
+            else:
+                return content[0]
+        else:
+            return content[1]
